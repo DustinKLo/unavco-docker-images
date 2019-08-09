@@ -1,0 +1,9 @@
+version: '2.2'
+services:
+  mintpy:
+    image: dustinklo/mintpy-jpl:latest
+    tty: true
+
+  aria-tools:
+    image: dustinklo/aria-tools-jpl:latest
+    tty: true
