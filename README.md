@@ -1,7 +1,7 @@
-h2. Running the `mintpy` and `ARIA-tools` containers
+## Running the `mintpy` and `ARIA-tools` containers
 `docker-compose up -d`
 
-h2. Entering the containers
+## Entering the containers
 `docker ps  # displays the list of running containers`
 
 ```
@@ -13,7 +13,7 @@ CONTAINER ID        IMAGE                             COMMAND             CREATE
 `docker exec -it <CONTAINER ID> bash`
 
 
-h1. building the images
+# building the images
 if you want to build the images from the `Dockerfile`, run these commands
 ```
 # building the mintpy image
