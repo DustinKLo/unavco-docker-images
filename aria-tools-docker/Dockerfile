@@ -34,13 +34,14 @@ RUN conda env create -f ./ARIA-tools/environment.yml
 RUN conda clean --all --yes
 
 # activating ARIA-tools environment
-RUN echo "conda activate ARIA-tools" >> /root/.bashrc
+RUN echo "conda activate ARIA-tools" >> /root/.bashrc && \
+    echo "cd /root/ARIA-tools" >> /root/.bashrc && \
+    echo "python setup.py build" >> /root/.bashrc && \
+    echo "python setup.py install" >> /root/.bashrc && \
+    echo "cd /root" >> /root/.bashrc
 
 # final installation steps for ARIA-tools
-RUN cd ARIA-tools && \
-	python setup.py build && \
-	python setup.py install && \
-	cd ..
+# WORKDIR /root
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]
