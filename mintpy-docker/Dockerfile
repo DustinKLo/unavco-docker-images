@@ -31,13 +31,15 @@ RUN chmod +x /usr/bin/tini
 WORKDIR /root
 
 # git clone mintpy
-RUN git clone https://github.com/insarlab/MintPy.git
-RUN conda env create -f ./MintPy/docs/conda_env.yml
+ENV MINTPY_HOME "/root/MintPy"
+RUN git clone https://github.com/insarlab/MintPy.git ${MINTPY_HOME}
+RUN conda env create -f ${MINTPY_HOME}/docs/conda_env.yml
 RUN conda clean --all --yes
 
 # activating mintpy environment
 RUN echo "conda activate mintpy" >> /root/.bashrc
-ENV PYTHONPATH "${PYTHONPATH}:/root/MintPy"
+ENV PYTHONPATH ${PYTHONPATH}:${MINTPY_HOME}
+ENV PATH ${PATH}:${MINTPY_HOME}/mintpy
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]
