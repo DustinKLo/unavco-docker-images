@@ -1,7 +1,24 @@
-## Running the `mintpy` and `ARIA-tools` containers
-`docker-compose up -d`
+# Dockerized ARIA-tools + Mintpy
+* if you want to build your images locally, follow step 1b
+* if you want to pull from my personal dockerhub, follow step 1a
 
-## Entering the containers
+## 1a. Running the `mintpy` and `ARIA-tools` containers
+```
+# pulling from Dockerhub
+docker-compose -f docker-compose-PullFromDockerHub.yml up -d
+```
+
+## 1b. building the images locally (without Dockerhub)
+Run these commands:
+```
+# starting
+docker-compose -f docker-compose-BuildLocally.yml up -d
+
+# shutting down
+docker-compose -f docker-compose-BuildLocally.yml down
+```
+
+## 2. Entering the containers
 `docker ps  # displays the list of running containers`
 
 ```
@@ -11,16 +28,3 @@ CONTAINER ID        IMAGE                             COMMAND             CREATE
 ```
 
 `docker exec -it <CONTAINER ID> bash`
-
-
-# building the images
-if you want to build the images from the `Dockerfile`, run these commands
-```
-# building the mintpy image
-cd mintpy-docker
-docker build -t mintpy-jpl .
-
-# building the aria-tools image
-cd aria-tools-docker
-docker build -t aria-tools-jpl .
-```

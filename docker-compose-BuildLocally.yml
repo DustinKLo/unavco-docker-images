@@ -1,0 +1,13 @@
+version: '2.2'
+services:
+  mintpy:
+    build:
+      context: ./mintpy-docker
+      dockerfile: Dockerfile
+    tty: true
+
+  aria-tools:
+    build:
+      context: ./aria-tools-docker
+      dockerfile: Dockerfile
+    tty: true
