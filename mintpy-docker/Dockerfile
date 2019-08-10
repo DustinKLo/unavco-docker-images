@@ -28,8 +28,7 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 RUN chmod +x /usr/bin/tini
 
 # changing work directories
-RUN mkdir -p /work/mintpy
-WORKDIR /work/mintpy
+WORKDIR /root
 
 # git clone mintpy
 RUN git clone https://github.com/insarlab/MintPy.git
@@ -38,7 +37,7 @@ RUN conda clean --all --yes
 
 # activating mintpy environment
 RUN echo "conda activate mintpy" >> /root/.bashrc
-ENV PYTHONPATH "${PYTHONPATH}:/work/mintpy/MintPy"
+ENV PYTHONPATH "${PYTHONPATH}:/root/MintPy"
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]

@@ -26,8 +26,7 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 RUN chmod +x /usr/bin/tini
 
 # changing work directories
-RUN mkdir -p /work/aria-tools
-WORKDIR /work/aria-tools
+WORKDIR /root
 
 # git clone aria-tools
 RUN git clone https://github.com/aria-tools/ARIA-tools.git
