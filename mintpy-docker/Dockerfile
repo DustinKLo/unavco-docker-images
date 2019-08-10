@@ -1,43 +1,44 @@
-FROM centos:centos7
-MAINTAINER Conda Development Team <conda@continuum.io>
+FROM debian:latest
 
-RUN yum -y update \
-    && yum -y install curl bzip2 \
-    && curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
-    && bash /tmp/miniconda.sh -bfp /usr/local/ \
-    && rm -rf /tmp/miniconda.sh \
-    && conda install -y python=3 \
-    && conda update conda \
-    && conda clean --all --yes \
-    && rpm -e --nodeps curl bzip2
+#  $ docker build . -t continuumio/miniconda3:latest -t continuumio/miniconda3:4.5.11
+#  $ docker run --rm -it continuumio/miniconda3:latest /bin/bash
+#  $ docker push continuumio/miniconda3:latest
+#  $ docker push continuumio/miniconda3:4.5.11
 
-# install libgeos library 
-RUN yum -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
 
-# install GCC compiler, git, and geos package
-RUN yum -y install sudo gcc git geos-devel
+RUN apt-get update --fix-missing && \
+    apt-get install -y wget bzip2 ca-certificates curl git && \
+    apt-get install -y build-essential && \
+    apt-get install -y libgeos-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# clean up yum
-RUN yum clean all
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh && \
+    /opt/conda/bin/conda clean -tipsy && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
 
-# creating USER mintpy
-RUN useradd -ms /bin/bash mintpy
-RUN echo "password" | passwd --stdin mintpy
-RUN usermod -aG wheel mintpy
-USER mintpy
-WORKDIR /home/mintpy
+ENV TINI_VERSION v0.16.1
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
+RUN chmod +x /usr/bin/tini
 
-# cloning and installing mintpy
+# changing work directories
+RUN mkdir -p /work/mintpy
+WORKDIR /work/mintpy
+
+# git clone mintpy
 RUN git clone https://github.com/insarlab/MintPy.git
 RUN conda env create -f ./MintPy/docs/conda_env.yml
-
-# cleaning conda
 RUN conda clean --all --yes
 
-# setting PYTHONPATH to MintPy so you can import it directly
-ENV PYTHONPATH "${PYTHONPATH}:/home/mintpy/MintPy"
+# activating mintpy environment
+RUN echo "conda activate mintpy" >> /root/.bashrc
+ENV PYTHONPATH "${PYTHONPATH}:/work/mintpy/MintPy"
 
-# activating environment
-ENV PATH /usr/local/envs/mintpy/bin:$PATH
-RUN /bin/bash -c "conda init bash"
-RUN /bin/bash -c ". ~/.bash_profile"
+ENTRYPOINT [ "/usr/bin/tini", "--" ]
+CMD [ "/bin/bash" ]
