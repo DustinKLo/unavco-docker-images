@@ -1,40 +1,44 @@
-FROM centos:centos7
-MAINTAINER Conda Development Team <conda@continuum.io>
+FROM debian:latest
 
-RUN yum -y update \
-    && yum -y install curl bzip2 \
-    && curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
-    && bash /tmp/miniconda.sh -bfp /usr/local/ \
-    && rm -rf /tmp/miniconda.sh \
-    && conda install -y python=3 \
-    && conda update conda \
-    && conda clean --all --yes \
-    && rpm -e --nodeps curl bzip2
+#  $ docker build . -t continuumio/miniconda3:latest -t continuumio/miniconda3:4.5.11
+#  $ docker run --rm -it continuumio/miniconda3:latest /bin/bash
+#  $ docker push continuumio/miniconda3:latest
+#  $ docker push continuumio/miniconda3:4.5.11
 
-# install git
-RUN yum -y install sudo git
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
 
-# clean up yum
-RUN yum clean all
+RUN apt-get update --fix-missing && \
+    apt-get install -y wget bzip2 ca-certificates curl git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# creating USER aria-tools
-RUN useradd -ms /bin/bash aria-tools
-RUN echo "password" | passwd --stdin aria-tools
-RUN usermod -aG wheel aria-tools
-USER aria-tools
-WORKDIR /home/aria-tools
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh && \
+    /opt/conda/bin/conda clean -tipsy && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
+
+ENV TINI_VERSION v0.16.1
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
+RUN chmod +x /usr/bin/tini
+
+# changing work directories
+RUN mkdir -p /work/aria-tools
+WORKDIR /work/aria-tools
 
 # git clone aria-tools
 RUN git clone https://github.com/aria-tools/ARIA-tools.git
 RUN conda env create -f ./ARIA-tools/environment.yml
-
-# cleaning conda environments
 RUN conda clean --all --yes
 
-# setting PYTHONPATH to ARIA-tools
-ENV PYTHONPATH "${PYTHONPATH}:/home/aria-tools/ARIA-tools"
+RUN echo "conda activate ARIA-tools" >> /root/.bashrc
+RUN cd ARIA-tools && \
+	python setup.py build && \
+	python setup.py install && \
+	cd ..
 
-# activating environment
-ENV PATH /usr/local/envs/ARIA-tools/bin:$PATH
-RUN /bin/bash -c "conda init bash"
-RUN /bin/bash -c ". ~/.bash_profile"
+ENTRYPOINT [ "/usr/bin/tini", "--" ]
+CMD [ "/bin/bash" ]
